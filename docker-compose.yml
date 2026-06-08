@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  chromadb:
+    image: chromadb/chroma:0.5.18
+    container_name: auracomply-chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    restart: unless-stopped
+
+  api:
+    build: .
+    container_name: auracomply-api
+    command: uvicorn api:app --host 0.0.0.0 --port 8001
+    ports:
+      - "8001:8001"
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-sonnet-4-6}
+      - AURACOMPLY_URL=${AURACOMPLY_URL:-http://auracomply:8000}
+      - CHROMA_PERSIST_DIR=/data/chroma_db
+      - EU_AI_ACT_PDF=/data/eu_ai_act.pdf
+      - TENANT_ID=${TENANT_ID:-rag-demo}
+    volumes:
+      - ./data:/data
+      - rag-chroma:/data/chroma_db
+    depends_on:
+      - chromadb
+    restart: unless-stopped
+
+  streamlit:
+    build: .
+    container_name: auracomply-streamlit
+    command: streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+    ports:
+      - "8501:8501"
+    environment:
+      - API_URL=http://api:8001
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  chroma-data:
+  rag-chroma:
