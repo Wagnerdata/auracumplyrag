@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   chromadb:
     image: chromadb/chroma:0.5.18
@@ -14,33 +12,57 @@ services:
     restart: unless-stopped
 
   api:
-    build: .
+    build:
+      context: .
+      # Kernel SDK from the sibling repo; see Dockerfile.
+      additional_contexts:
+        sdk: ../AuraComply/sdk
     container_name: auracomply-api
     command: uvicorn api:app --host 0.0.0.0 --port 8001
     ports:
       - "8001:8001"
+    # All values come from .env (see .env.example). Secrets have no
+    # default: the SDK refuses to start without a kernel bearer and an
+    # HMAC key, so compose fails fast instead of booting a broken API.
+    # Tenant identity is derived from AURACOMPLY_API_TOKEN server-side;
+    # there is deliberately no TENANT_ID here.
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-sonnet-4-6}
-      - AURACOMPLY_URL=${AURACOMPLY_URL:-http://auracomply:8000}
       - CHROMA_PERSIST_DIR=/data/chroma_db
       - EU_AI_ACT_PDF=/data/eu_ai_act.pdf
-      - TENANT_ID=${TENANT_ID:-rag-demo}
+      - RAG_API_TOKEN=${RAG_API_TOKEN:-}
+      - AURACOMPLY_DEMO_PROFILE=${AURACOMPLY_DEMO_PROFILE:-0}
+      # aura-compliance:5002 resolves only when the api joins the
+      # kernel's docker network; otherwise set AURACOMPLY_URL in .env.
+      - AURACOMPLY_URL=${AURACOMPLY_URL:-http://aura-compliance:5002}
+      - AURACOMPLY_API_TOKEN=${AURACOMPLY_API_TOKEN:?AURACOMPLY_API_TOKEN must be set in .env}
+      - AURACOMPLY_BUFFER_HMAC_KEY=${AURACOMPLY_BUFFER_HMAC_KEY:?AURACOMPLY_BUFFER_HMAC_KEY must be set in .env}
+      - AURACOMPLY_SEAL_POLICY=${AURACOMPLY_SEAL_POLICY:-buffered}
+      # Fixed in-container path on a named volume so buffered seals
+      # survive container restarts.
+      - AURACOMPLY_BUFFER_DIR=/data/auracomply-buffer
     volumes:
       - ./data:/data
       - rag-chroma:/data/chroma_db
+      - rag-seal-buffer:/data/auracomply-buffer
     depends_on:
       - chromadb
     restart: unless-stopped
 
   streamlit:
-    build: .
+    build:
+      context: .
+      # Kernel SDK from the sibling repo; see Dockerfile.
+      additional_contexts:
+        sdk: ../AuraComply/sdk
     container_name: auracomply-streamlit
     command: streamlit run app.py --server.port 8501 --server.address 0.0.0.0
     ports:
       - "8501:8501"
     environment:
       - API_URL=http://api:8001
+      - RAG_API_TOKEN=${RAG_API_TOKEN:-}
     depends_on:
       - api
     restart: unless-stopped
@@ -48,3 +70,4 @@ services:
 volumes:
   chroma-data:
   rag-chroma:
+  rag-seal-buffer:

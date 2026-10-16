@@ -1,0 +1,14 @@
+# Secrets and local state never go into the image.
+.env
+.auracomply-buffer/
+chroma_db/
+data/
+
+# Tooling noise.
+.git/
+.venv/
+venv/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+*.pyc
