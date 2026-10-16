@@ -259,9 +259,10 @@ Two events are sealed under `product="rag-eu-ai-act"`:
 The SDK's `SealResult` is projected into the response `seal` envelope
 (`line_id`, `event_hash`, `log_id`, `replayed`, `buffered`).
 
-> Known gap: `app.py` still reads the older `seal.ok` / `seal.seal` shape and
-> does not send the bearer token, so the Streamlit UI shows a seal warning and
-> only works against an API running with `AURACOMPLY_DEMO_PROFILE=1`.
+The Streamlit UI sends `RAG_API_TOKEN` as its bearer and reports a seal as
+successful only when the kernel confirmed it (`event_hash` present). A
+buffered seal is shown as "queued, not yet confirmed"; a missing or
+inconsistent seal is shown as a warning.
 
 ---
 
