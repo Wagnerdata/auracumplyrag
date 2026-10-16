@@ -136,19 +136,45 @@ make run-ui        # http://localhost:8501
 
 ### 2. Docker
 
+The image build needs the AuraComply kernel repo checked out next to this
+one, because the SDK is copied from `../AuraComply/sdk`:
+
+```
+<parent>/
+├── AuraComply/        # kernel repo (provides sdk/)
+└── auracomply-rag/    # this repo
+```
+
 ```bash
 cp .env.example .env
+# set ANTHROPIC_API_KEY, RAG_API_TOKEN, AURACOMPLY_API_TOKEN and
+# AURACOMPLY_BUFFER_HMAC_KEY in .env (compose refuses to start without
+# the two AURACOMPLY_* secrets)
 docker compose up --build -d
 # Streamlit: http://localhost:8501
 # FastAPI:   http://localhost:8001/docs
 # ChromaDB:  http://localhost:8000
 ```
 
-> Note: the base `docker-compose.yml` does not yet pass `RAG_API_TOKEN` or the
-> `AURACOMPLY_*` SDK variables (other than `AURACOMPLY_URL`) to the `api`
-> container, and the build context does not include `../AuraComply/sdk`.
-> The `chromadb` service is started but the API uses its local persist
-> directory, not that service.
+Compose passes the SDK to the build as the named context `sdk`
+(`additional_contexts`, needs BuildKit). Without compose, pass it yourself
+from this repo's root:
+
+```bash
+docker build --build-context sdk=../AuraComply/sdk -t auracomply-rag .
+```
+
+Notes:
+
+- The API reaches the kernel at `http://aura-compliance:5002` by default,
+  which only resolves when the `api` container joins the kernel's Docker
+  network; otherwise set `AURACOMPLY_URL` in `.env`.
+- Pending seals are kept in the `rag-seal-buffer` named volume
+  (`/data/auracomply-buffer`), so they survive container restarts.
+- `.env`, `chroma_db/`, `data/` and the local seal buffer are excluded from
+  the image by `.dockerignore`.
+- The `chromadb` service is started but the API uses its local persist
+  directory, not that service.
 
 ### 3. Tests
 

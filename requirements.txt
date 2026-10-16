@@ -5,8 +5,9 @@
 # ── AuraComply kernel SDK ────────────────────────────────────────────
 # Path-local install — the kernel SDK is not on PyPI yet (D-006 / Phase 2).
 # CI clones both repos side-by-side; local dev does the same. When the
-# SDK is published, swap this line for `auracomply==<version>`.
-auracomply @ file:../AuraComply/sdk
+# SDK is published, swap this line for `auracomply-sdk==<version>`. The distribution is
+# `auracomply-sdk` (import name `auracomply`); pip rejects a mismatched name.
+auracomply-sdk @ file:../AuraComply/sdk
 
 # ── API layer ────────────────────────────────────────────────────────
 fastapi==0.136.0
