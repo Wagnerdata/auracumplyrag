@@ -34,8 +34,8 @@ or different rule, it appears below.
   boundary rejects structurally-PII strings with 400, and the motto
   is "your data is yours; the audit is AuraComply's". The chain row
   is hashes + the bounded `decision.rationale_summary` (max 2000 chars,
-  PII-screened) only. Questions are atable via `trace_id =
-  sha256(question)`; answers are atable via the chunks that grounded
+  PII-screened) only. Questions are traceable via `trace_id =
+  sha256(question)`; answers are traceable via the chunks that grounded
   them (`input_refs.chunk_hashes`) plus the rationale summary.
 - **`AURACOMPLY_SEAL_POLICY=buffered` is the default.** Demo and dev
   environments should never set `strict` without an explicit reason;
@@ -95,7 +95,8 @@ or different rule, it appears below.
 ## Reference
 
 - EU AI Act Reg. 2024/1689 — Articles 6 (high-risk), 9 (risk management),
-  13 (traceability), 14 (human oversight), 50 (transparency), 51–55
-  (GPAI), Annexes III–IV (high-risk use cases, technical documentation).
+  12 (record-keeping), 13 (transparency to deployers), 14 (human
+  oversight), 50 (transparency), 51–55 (GPAI), Annexes III–IV
+  (high-risk use cases, technical documentation).
 - Source PDF lives at `data/eu_ai_act.pdf` (EUR-Lex publication;
   `source_doc_sha256` recomputed at every ingest).
